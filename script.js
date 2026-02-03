@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let timeLeft = 30
   let player1Name = "Player 1"
   let player2Name = "Player 2"
+  let moveInProgress = false // Prevent rapid successive moves
 
   // Initialize the game board
   function initializeBoard() {
@@ -64,10 +65,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Handle cell click
   function handleCellClick(row, col) {
-    // Check if the game is active and the cell is empty
-    if (!gameActive || board[row][col] !== 0) {
+    // Check if the game is active and the cell is empty, and prevent rapid moves
+    if (!gameActive || board[row][col] !== 0 || moveInProgress) {
       return
     }
+    
+    moveInProgress = true
 
     // Update the board state
     board[row][col] = currentPlayer
@@ -85,18 +88,21 @@ document.addEventListener("DOMContentLoaded", () => {
     // Check for win
     if (checkWin(row, col)) {
       endGame(currentPlayer)
+      moveInProgress = false
       return
     }
 
     // Check for draw
     if (checkDraw()) {
       endGame(0)
+      moveInProgress = false
       return
     }
 
     // Switch player
     currentPlayer = currentPlayer === 1 ? 2 : 1
     updateCurrentPlayerDisplay()
+    moveInProgress = false
     resetTimer()
   }
 
@@ -249,13 +255,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateTimerDisplay() {
-    timerDisplay.textContent = `Time: ${timeLeft}s`
+    // Ensure timer doesn't display negative numbers
+    const displayTime = Math.max(0, timeLeft)
+    timerDisplay.textContent = `Time: ${displayTime}s`
 
     // Add warning classes based on time left
     timerDisplay.classList.remove("warning", "danger")
-    if (timeLeft <= 10 && timeLeft > 5) {
+    if (displayTime <= 10 && displayTime > 5) {
       timerDisplay.classList.add("warning")
-    } else if (timeLeft <= 5) {
+    } else if (displayTime <= 5) {
       timerDisplay.classList.add("danger")
     }
   }
@@ -274,6 +282,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Show player name modal
   function showPlayerNameModal() {
     playerNameModal.classList.add("show")
+    gameActive = false // Pause game during modal
+    stopTimer()
     player1NameInput.value = player1Name
     player2NameInput.value = player2Name
     player1NameInput.focus()
@@ -297,11 +307,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.querySelector(".container")
     const header = document.querySelector("header")
     const footer = document.querySelector("footer")
-
-    const availableHeight = window.innerHeight - header.offsetHeight - footer.offsetHeight - 30
     const gameBoard = document.getElementById("gameBoard")
 
-    const size = Math.min(availableHeight, window.innerWidth * 0.8)
+    // Ensure header and footer have been rendered before calculating
+    if (!header || !footer || header.offsetHeight === 0) {
+      return
+    }
+
+    const availableHeight = window.innerHeight - header.offsetHeight - footer.offsetHeight - 30
+    const size = Math.max(200, Math.min(availableHeight, window.innerWidth * 0.8)) // Minimum 200px
+    
     gameBoard.style.width = `${size}px`
     gameBoard.style.height = `${size}px`
   }
