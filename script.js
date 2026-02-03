@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const player1ScoreDisplay = document.getElementById("player1Score")
   const player2ScoreDisplay = document.getElementById("player2Score")
   const playButton = document.getElementById("playButton")
+  const undoButton = document.getElementById("undoButton")
+  const moveCountDisplay = document.getElementById("moveCount")
   const infoButton = document.getElementById("infoButton")
   const closeInfoButton = document.getElementById("closeInfoButton")
   const infoPanel = document.getElementById("infoPanel")
@@ -29,6 +31,62 @@ document.addEventListener("DOMContentLoaded", () => {
   let player1Name = "Player 1"
   let player2Name = "Player 2"
   let moveInProgress = false // Prevent rapid successive moves
+  let moveHistory = [] // Track moves for undo
+  let moveCount = 0 // Total moves in current game
+
+  // Load stats from localStorage
+  function loadStats() {
+    const saved = localStorage.getItem('gomokuStats')
+    if (saved) {
+      const stats = JSON.parse(saved)
+      player1Wins = stats.player1Wins || 0
+      player2Wins = stats.player2Wins || 0
+      totalGames = stats.totalGames || 0
+    }
+  }
+
+  // Save stats to localStorage
+  function saveStats() {
+    localStorage.setItem('gomokuStats', JSON.stringify({
+      player1Wins,
+      player2Wins,
+      totalGames
+    }))
+  }
+
+  // Play sound effect
+  function playSound(type) {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      
+      if (type === 'move') {
+        oscillator.frequency.value = 800
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.1)
+      } else if (type === 'win') {
+        oscillator.frequency.value = 1200
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.3)
+      } else if (type === 'undo') {
+        oscillator.frequency.value = 600
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08)
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.08)
+      }
+    } catch (e) {
+      // Audio context not available, silently fail
+    }
+  }
 
   // Initialize the game board
   function initializeBoard() {
@@ -87,6 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Check for win
     if (checkWin(row, col)) {
+      playSound('win')
       endGame(currentPlayer)
       moveInProgress = false
       return
@@ -98,6 +157,12 @@ document.addEventListener("DOMContentLoaded", () => {
       moveInProgress = false
       return
     }
+
+    // Record move for undo
+    moveHistory.push({ row, col, player: currentPlayer })
+    moveCount++
+    moveCountDisplay.textContent = moveCount
+    playSound('move')
 
     // Switch player
     currentPlayer = currentPlayer === 1 ? 2 : 1
@@ -183,6 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
     gameActive = false
     totalGames++
     stopTimer()
+    undoButton.disabled = true
 
     if (winner === 1) {
       player1Wins++
@@ -211,12 +277,16 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       currentPlayerDisplay.style.color = "#2196F3"
     }
+    
+    // Update undo button state
+    undoButton.disabled = moveHistory.length === 0 || !gameActive
   }
 
   // Update the score display
   function updateScoreDisplay() {
     player1ScoreDisplay.textContent = `${player1Wins}/${totalGames}`
     player2ScoreDisplay.textContent = `${player2Wins}/${totalGames}`
+    saveStats() // Save to localStorage
   }
 
   // Timer functions
@@ -273,6 +343,8 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeBoard()
     gameActive = true
     currentPlayer = 1
+    moveHistory = []
+    moveCount = 0
     updateCurrentPlayerDisplay()
     playButton.textContent = "Restart"
     winMessage.classList.remove("show")
@@ -300,6 +372,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     playerNameModal.classList.remove("show")
     startNewGame()
+  }
+
+  // Undo last move
+  function undoMove() {
+    if (moveHistory.length === 0 || !gameActive) {
+      return
+    }
+
+    const lastMove = moveHistory.pop()
+    moveCount--
+    
+    // Clear the piece from the board
+    board[lastMove.row][lastMove.col] = 0
+    const cell = document.querySelector(`.cell[data-row="${lastMove.row}"][data-col="${lastMove.col}"]`)
+    const piece = cell.querySelector(".piece")
+    piece.className = "piece" // Reset classes
+    
+    // Switch back to the player who made that move
+    currentPlayer = lastMove.player
+    playSound('undo')
+    updateCurrentPlayerDisplay()
+    resetTimer()
   }
 
   // Adjust the board size based on window dimensions
@@ -369,7 +463,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })
 
+  undoButton.addEventListener("click", undoMove)
+
+  // Keyboard shortcut for undo (Ctrl+Z)
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+      e.preventDefault()
+      undoMove()
+    }
+  })
+
   // Initialize the game
+  loadStats()
   initializeBoard()
   updateScoreDisplay()
 

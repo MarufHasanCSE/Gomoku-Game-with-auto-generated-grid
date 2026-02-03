@@ -17,6 +17,9 @@
         </header>
         
         <main>
+            <div class="game-stats" id="gameStats">
+                <span>Moves: <span id="moveCount">0</span></span>
+            </div>
             <div class="game-board" id="gameBoard"></div>
         </main>
         
@@ -30,6 +33,7 @@
                     <span class="player player-2" id="player2Label">Player 2:</span>
                     <span class="score-value" id="player2Score">0/0</span>
                 </div>
+                <button class="undo-button" id="undoButton" title="Undo last move (Ctrl+Z)">Undo</button>
                 <button class="play-button" id="playButton">Play</button>
             </div>
         </footer>
