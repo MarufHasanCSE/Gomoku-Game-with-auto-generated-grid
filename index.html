@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomoku Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gomoku <span class="info-button" id="infoButton">?</span></h1>
+            <div class="player-info">
+                <div class="current-player" id="currentPlayer">Current Player: Player 1</div>
+                <div class="timer" id="timer">Time: 30s</div>
+            </div>
+        </header>
+        
+        <main>
+            <div class="game-board" id="gameBoard"></div>
+        </main>
+        
+        <footer>
+            <div class="score-panel">
+                <div class="score">
+                    <span class="player player-1" id="player1Label">Player 1:</span>
+                    <span class="score-value" id="player1Score">0/0</span>
+                </div>
+                <div class="score">
+                    <span class="player player-2" id="player2Label">Player 2:</span>
+                    <span class="score-value" id="player2Score">0/0</span>
+                </div>
+                <button class="play-button" id="playButton">Play</button>
+            </div>
+        </footer>
+        
+        <!-- Modals -->
+        <div class="info-panel" id="infoPanel">
+            <div class="info-content">
+                <h2>Game Rules</h2>
+                <p>Gomoku is a two-player board game where players take turns placing pieces on the board.</p>
+                <p>The first player to get 5 pieces in a row (horizontally, vertically, or diagonally) wins the game.</p>
+                <button class="close-button" id="closeInfoButton">Close</button>
+            </div>
+        </div>
+        
+        <div class="win-message" id="winMessage">
+            <div class="message-content">
+                <h2 id="winText">Player 1 Wins!</h2>
+                <button class="next-button" id="nextButton">Next Game</button>
+            </div>
+        </div>
+
+        <div class="player-name-modal" id="playerNameModal">
+            <div class="modal-content">
+                <h2>Enter Player Names</h2>
+                <div class="input-group">
+                    <label for="player1Name">Player 1:</label>
+                    <input type="text" id="player1Name" placeholder="Player 1" maxlength="15">
+                </div>
+                <div class="input-group">
+                    <label for="player2Name">Player 2:</label>
+                    <input type="text" id="player2Name" placeholder="Player 2" maxlength="15">
+                </div>
+                <button class="start-game-button" id="startGameButton">Start Game</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
