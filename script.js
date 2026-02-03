@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Game elements
   const gameBoard = document.getElementById("gameBoard")
   const currentPlayerDisplay = document.getElementById("currentPlayer")
   const timerDisplay = document.getElementById("timer")
@@ -19,7 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const player2NameInput = document.getElementById("player2Name")
   const startGameButton = document.getElementById("startGameButton")
 
-  // Game state
   let gameActive = false
   let currentPlayer = 1
   let player1Wins = 0
@@ -30,11 +28,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let timeLeft = 30
   let player1Name = "Player 1"
   let player2Name = "Player 2"
-  let moveInProgress = false // Prevent rapid successive moves
-  let moveHistory = [] // Track moves for undo
-  let moveCount = 0 // Total moves in current game
+  let moveInProgress = false
+  let moveHistory = []
+  let moveCount = 0
 
-  // Load stats from localStorage
   function loadStats() {
     const saved = localStorage.getItem('gomokuStats')
     if (saved) {
@@ -45,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Save stats to localStorage
   function saveStats() {
     localStorage.setItem('gomokuStats', JSON.stringify({
       player1Wins,
@@ -54,7 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }))
   }
 
-  // Play sound effect
   function playSound(type) {
     try {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)()
@@ -84,21 +79,16 @@ document.addEventListener("DOMContentLoaded", () => {
         oscillator.stop(audioContext.currentTime + 0.08)
       }
     } catch (e) {
-      // Audio context not available, silently fail
     }
   }
 
-  // Initialize the game board
   function initializeBoard() {
-    // Clear the game board
     gameBoard.innerHTML = ""
 
-    // Create a 10x10 grid
     board = Array(10)
       .fill()
       .map(() => Array(10).fill(0))
 
-    // Create cells for the game board
     for (let row = 0; row < 10; row++) {
       for (let col = 0; col < 10; col++) {
         const cell = document.createElement("div")
@@ -106,34 +96,27 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.dataset.row = row
         cell.dataset.col = col
 
-        // Create piece element (initially hidden)
         const piece = document.createElement("div")
         piece.className = "piece"
         cell.appendChild(piece)
 
-        // Add click event listener
         cell.addEventListener("click", () => handleCellClick(row, col))
 
         gameBoard.appendChild(cell)
       }
     }
-    // Add this at the end of the function
     setTimeout(adjustBoardSize, 0)
   }
 
-  // Handle cell click
   function handleCellClick(row, col) {
-    // Check if the game is active and the cell is empty, and prevent rapid moves
     if (!gameActive || board[row][col] !== 0 || moveInProgress) {
       return
     }
     
     moveInProgress = true
 
-    // Update the board state
     board[row][col] = currentPlayer
 
-    // Update the UI
     const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`)
     const piece = cell.querySelector(".piece")
 
@@ -143,7 +126,6 @@ document.addEventListener("DOMContentLoaded", () => {
       piece.classList.add("player2-piece")
     }
 
-    // Check for win
     if (checkWin(row, col)) {
       playSound('win')
       endGame(currentPlayer)
@@ -151,33 +133,29 @@ document.addEventListener("DOMContentLoaded", () => {
       return
     }
 
-    // Check for draw
     if (checkDraw()) {
       endGame(0)
       moveInProgress = false
       return
     }
 
-    // Record move for undo
     moveHistory.push({ row, col, player: currentPlayer })
     moveCount++
     moveCountDisplay.textContent = moveCount
     playSound('move')
 
-    // Switch player
     currentPlayer = currentPlayer === 1 ? 2 : 1
     updateCurrentPlayerDisplay()
     moveInProgress = false
     resetTimer()
   }
 
-  // Check for win
   function checkWin(row, col) {
     const directions = [
-      [0, 1], // horizontal
-      [1, 0], // vertical
-      [1, 1], // diagonal down-right
-      [1, -1], // diagonal down-left
+      [0, 1],
+      [1, 0],
+      [1, 1],
+      [1, -1],
     ]
 
     const player = board[row][col]
@@ -186,7 +164,6 @@ document.addEventListener("DOMContentLoaded", () => {
       let count = 1
       const positions = [[row, col]]
 
-      // Check in positive direction
       for (let i = 1; i < 5; i++) {
         const newRow = row + i * dx
         const newCol = col + i * dy
@@ -199,7 +176,6 @@ document.addEventListener("DOMContentLoaded", () => {
         positions.push([newRow, newCol])
       }
 
-      // Check in negative direction
       for (let i = 1; i < 5; i++) {
         const newRow = row - i * dx
         const newCol = col - i * dy
@@ -212,7 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
         positions.push([newRow, newCol])
       }
 
-      // If 5 or more in a row, it's a win
       if (count >= 5) {
         highlightWinningPieces(positions)
         return true
@@ -222,7 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return false
   }
 
-  // Highlight winning pieces
   function highlightWinningPieces(positions) {
     for (const [row, col] of positions) {
       const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`)
@@ -231,7 +205,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Check for draw
   function checkDraw() {
     for (let row = 0; row < 10; row++) {
       for (let col = 0; col < 10; col++) {
@@ -243,7 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return true
   }
 
-  // End the game
   function endGame(winner) {
     gameActive = false
     totalGames++
@@ -267,7 +239,6 @@ document.addEventListener("DOMContentLoaded", () => {
     winMessage.classList.add("show")
   }
 
-  // Update the current player display
   function updateCurrentPlayerDisplay() {
     const playerName = currentPlayer === 1 ? player1Name : player2Name
     currentPlayerDisplay.textContent = `Current Player: ${playerName}`
@@ -278,18 +249,15 @@ document.addEventListener("DOMContentLoaded", () => {
       currentPlayerDisplay.style.color = "#2196F3"
     }
     
-    // Update undo button state
     undoButton.disabled = moveHistory.length === 0 || !gameActive
   }
 
-  // Update the score display
   function updateScoreDisplay() {
     player1ScoreDisplay.textContent = `${player1Wins}/${totalGames}`
     player2ScoreDisplay.textContent = `${player2Wins}/${totalGames}`
-    saveStats() // Save to localStorage
+    saveStats()
   }
 
-  // Timer functions
   function startTimer() {
     timeLeft = 30
     updateTimerDisplay()
@@ -303,7 +271,6 @@ document.addEventListener("DOMContentLoaded", () => {
       updateTimerDisplay()
 
       if (timeLeft <= 0) {
-        // Time's up, switch to the next player
         clearInterval(timerInterval)
         currentPlayer = currentPlayer === 1 ? 2 : 1
         updateCurrentPlayerDisplay()
@@ -325,11 +292,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateTimerDisplay() {
-    // Ensure timer doesn't display negative numbers
     const displayTime = Math.max(0, timeLeft)
     timerDisplay.textContent = `Time: ${displayTime}s`
 
-    // Add warning classes based on time left
     timerDisplay.classList.remove("warning", "danger")
     if (displayTime <= 10 && displayTime > 5) {
       timerDisplay.classList.add("warning")
@@ -338,7 +303,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Start a new game
   function startNewGame() {
     initializeBoard()
     gameActive = true
@@ -351,22 +315,19 @@ document.addEventListener("DOMContentLoaded", () => {
     resetTimer()
   }
 
-  // Show player name modal
   function showPlayerNameModal() {
     playerNameModal.classList.add("show")
-    gameActive = false // Pause game during modal
+    gameActive = false
     stopTimer()
     player1NameInput.value = player1Name
     player2NameInput.value = player2Name
     player1NameInput.focus()
   }
 
-  // Save player names and start game
   function savePlayerNamesAndStartGame() {
     player1Name = player1NameInput.value.trim() || "Player 1"
     player2Name = player2NameInput.value.trim() || "Player 2"
 
-    // Update player labels in the score panel
     document.getElementById("player1Label").textContent = `${player1Name}:`
     document.getElementById("player2Label").textContent = `${player2Name}:`
 
@@ -374,7 +335,6 @@ document.addEventListener("DOMContentLoaded", () => {
     startNewGame()
   }
 
-  // Undo last move
   function undoMove() {
     if (moveHistory.length === 0 || !gameActive) {
       return
@@ -383,47 +343,40 @@ document.addEventListener("DOMContentLoaded", () => {
     const lastMove = moveHistory.pop()
     moveCount--
     
-    // Clear the piece from the board
     board[lastMove.row][lastMove.col] = 0
     const cell = document.querySelector(`.cell[data-row="${lastMove.row}"][data-col="${lastMove.col}"]`)
     const piece = cell.querySelector(".piece")
-    piece.className = "piece" // Reset classes
+    piece.className = "piece"
     
-    // Switch back to the player who made that move
     currentPlayer = lastMove.player
     playSound('undo')
     updateCurrentPlayerDisplay()
     resetTimer()
   }
 
-  // Adjust the board size based on window dimensions
   function adjustBoardSize() {
     const container = document.querySelector(".container")
     const header = document.querySelector("header")
     const footer = document.querySelector("footer")
     const gameBoard = document.getElementById("gameBoard")
 
-    // Ensure header and footer have been rendered before calculating
     if (!header || !footer || header.offsetHeight === 0) {
       return
     }
 
     const availableHeight = window.innerHeight - header.offsetHeight - footer.offsetHeight - 30
-    const size = Math.max(200, Math.min(availableHeight, window.innerWidth * 0.8)) // Minimum 200px
+    const size = Math.max(200, Math.min(availableHeight, window.innerWidth * 0.8))
     
     gameBoard.style.width = `${size}px`
     gameBoard.style.height = `${size}px`
   }
 
-  // Add window resize event listener
   window.addEventListener("resize", adjustBoardSize)
 
-  // Event listeners
   playButton.addEventListener("click", () => {
     if (playButton.textContent === "Play") {
       showPlayerNameModal()
     } else {
-      // Confirm restart if game is in progress
       if (gameActive) {
         if (confirm("Are you sure you want to restart the game?")) {
           showPlayerNameModal()
@@ -450,7 +403,6 @@ document.addEventListener("DOMContentLoaded", () => {
     savePlayerNamesAndStartGame()
   })
 
-  // Allow Enter key to submit player names
   player1NameInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       player2NameInput.focus()
@@ -465,7 +417,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   undoButton.addEventListener("click", undoMove)
 
-  // Keyboard shortcut for undo (Ctrl+Z)
   document.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "z") {
       e.preventDefault()
@@ -473,11 +424,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })
 
-  // Initialize the game
   loadStats()
   initializeBoard()
   updateScoreDisplay()
 
-  // Add this at the end
   setTimeout(adjustBoardSize, 0)
 })
